@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 
 using property_type = uint32_t;
 using property_value = uint64_t;
@@ -39,8 +40,8 @@ struct tree_node : std::enable_shared_from_this<tree_node> {
     // uint64_t _handle;                                   // 唯一标记
     std::string _handle;                                // debug handle
     std::unordered_map<property_type, property_value> _property;   // 属性列表
-    std::vector<std::shared_ptr<tree_node>> _children;  // 子节点
-    std::weak_ptr<tree_node> _parent;                   // 父节点
+    std::unordered_set<std::shared_ptr<tree_node>> _children;      // 子节点
+    std::weak_ptr<tree_node> _parent;                              // 父节点
 
     explicit tree_node(const std::string& handle, std::initializer_list<std::pair<const property_type, property_value>> props)
         : _handle(handle)
@@ -56,7 +57,7 @@ struct tree_node : std::enable_shared_from_this<tree_node> {
         assert(child->_parent.lock() == nullptr);
 
         child->_parent = weak_from_this();
-        _children.push_back(child);
+        _children.insert(child);
 
         child->__property_up();
 
@@ -73,6 +74,10 @@ struct tree_node : std::enable_shared_from_this<tree_node> {
             return true;
         }
         __property_off();
+
+        spt->_children.erase(shared_from_this());
+        _parent.reset();
+
         return true;
     }
 
@@ -197,6 +202,8 @@ public:
 
         _property_tree._root = root;
 
+        slot1->property_add(5, 1);
+        slot1->property_add(11, 1);
         slot1->uninstall();
 
         return true;
