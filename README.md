@@ -29,3 +29,6 @@
 
 ## attribute_tree.h
 - 树形结构的属性系统计划（初始模型，还在设计中）
+
+## common_sum.h
+- 新标准 `std::common_type` 的尝试，摘录的一段语法糖代码
