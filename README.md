@@ -32,3 +32,6 @@
 
 ## common_sum.h
 - 新标准 `std::common_type` 的尝试，摘录的一段语法糖代码
+
+## publishing_version
+- python 代码，解析版本号，基于 version.template 重写一个 version.h 文件，一般在版本发布前配合发布脚本使用
