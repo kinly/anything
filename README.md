@@ -1,5 +1,8 @@
 # anything
-小内容备忘
+零碎内容
+
+## encoding
+- gbk utf8 ~
 
 ## handle_pool
 - 对象句柄池，给对象映射句柄
