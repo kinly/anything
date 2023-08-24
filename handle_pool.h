@@ -30,7 +30,7 @@ namespace base {
     };
 
     /**
-     * \brief handle Êı¾İÀàĞÍ
+     * \brief handle æ•°æ®ç±»å‹
      */
     using handle_type_default = uint64_t;
 
@@ -50,11 +50,11 @@ namespace base {
             type _handle = 0;
 
             struct {
-                type _cell : bits::cell;
-                type _chunk : bits::chunk;
-                type _rnd : bits::rnd;
-                type _crc : bits::crc;
-                type _type : bits::type;
+                type _cell : static_cast<unsigned>(bits::cell);
+                type _chunk : static_cast<unsigned>(bits::chunk);
+                type _rnd : static_cast<unsigned>(bits::rnd);
+                type _crc : static_cast<unsigned>(bits::crc);
+                type _type : static_cast<unsigned>(bits::type);
             };
         };
 
@@ -89,16 +89,16 @@ namespace base {
         virtual ~entity_handle() = default;
 
         /**
-         * \brief ¾ä±ú
-         * \return ¾ä±ú
+         * \brief å¥æŸ„
+         * \return å¥æŸ„
          */
         entity_handle_type handle() const {
             return this->_handle;
         }
 
         /**
-         * \brief ÀàĞÍ
-         * \return ÀàĞÍ
+         * \brief ç±»å‹
+         * \return ç±»å‹
          */
         virtual entity_type get_type() = 0;
 
@@ -108,42 +108,42 @@ namespace base {
         }
 
         /**
-         * \brief ´´½¨
-         * \param ptr ¶ÔÏó
-         * \return ¾ä±ú
+         * \brief åˆ›å»º
+         * \param ptr å¯¹è±¡
+         * \return å¥æŸ„
          */
         static entity_handle_type new_handle(entity_handle* ptr);
 
         /**
-         * \brief Ïú»Ù
-         * \param ptr ¶ÔÏó
+         * \brief é”€æ¯
+         * \param ptr å¯¹è±¡
          */
         static void del_handle(entity_handle* ptr);
 
         /**
-         * \brief ×ª»»
-         * \param handle_value ¾ä±ú
-         * \return ¶ÔÏó
+         * \brief è½¬æ¢
+         * \param handle_value å¥æŸ„
+         * \return å¯¹è±¡
          */
         static _Child_Type* exchange(entity_handle_type handle_value);
 
         /**
-         * \brief ´´½¨
-         * \param ptr ¶ÔÏó
-         * \return ¾ä±ú
+         * \brief åˆ›å»º
+         * \param ptr å¯¹è±¡
+         * \return å¥æŸ„
          */
         static entity_handle_type new_handle_mt(entity_handle* ptr);
 
         /**
-         * \brief Ïú»Ù
-         * \param ptr ¶ÔÏó
+         * \brief é”€æ¯
+         * \param ptr å¯¹è±¡
          */
         static void del_handle_mt(entity_handle* ptr);
 
         /**
-         * \brief ×ª»»
-         * \param handle_value ¾ä±ú
-         * \return ¶ÔÏó
+         * \brief è½¬æ¢
+         * \param handle_value å¥æŸ„
+         * \return å¯¹è±¡
          */
         static _Child_Type* exchange_mt(entity_handle_type handle_value);
     }; // end class entity_handle
@@ -151,7 +151,7 @@ namespace base {
     template<typename _Type, typename _Handle_Value, typename _Lock = non_lock>
     class entity_pool final {
         using type = _Type;
-        using entity_handle_t = typename entity_handle<typename _Type, typename _Handle_Value>;
+        using entity_handle_t = entity_handle<_Type, _Handle_Value>;
         using entity_point = entity_handle_t*;
         using lock_type = _Lock;
 
@@ -164,8 +164,8 @@ namespace base {
         using cell_array = std::array<entity_point, max_cell_size>;
 
         struct chunk {
-            typename entity_handle_t::type _next = 0;   // ÏÂÒ»¸ö¿Õµã£¬-1 ±íÊ¾Âú
-            typename entity_handle_t::type _alloc = 0;  // ÒÑ·ÖÅäµÄÊıÁ¿
+            typename entity_handle_t::type _next = 0;   // ä¸‹ä¸€ä¸ªç©ºç‚¹ï¼Œ-1 è¡¨ç¤ºæ»¡
+            typename entity_handle_t::type _alloc = 0;  // å·²åˆ†é…çš„æ•°é‡
             typename entity_handle_t::type _crc = 0;    // crc flag
 
             cell_array _cells = { nullptr };        // cells
@@ -182,9 +182,9 @@ namespace base {
         mutable lock_type _lock;
         std::vector<chunk> _chunks;                       // chunks
         typename entity_handle_t::type _rnd = 0;          // round flag
-        typename entity_handle_t::type _last_chunk = 0;   // ¿ÉÓÃµÄ chunk
+        typename entity_handle_t::type _last_chunk = 0;   // å¯ç”¨çš„ chunk
 
-        std::atomic<std::size_t> _total;                  // ×ÜÊı
+        std::atomic<std::size_t> _total;                  // æ€»æ•°
         std::unordered_map<typename entity_handle_t::entity_type, std::size_t> _type2count;
 
     private:
@@ -321,8 +321,8 @@ namespace base {
     }; // end class entity_pool
 
     /**
-     * \brief ĞÂ½¨handle
-     * \param ptr Ö¸Õë
+     * \brief æ–°å»ºhandle
+     * \param ptr æŒ‡é’ˆ
      * \return handle
      */
     template <typename _Child_Type, typename _Handle_Value>
@@ -331,8 +331,8 @@ namespace base {
     }
 
     /**
-     * \brief É¾³ı£¨»ØÊÕ£©handle
-     * \param ptr Ö¸Õë
+     * \brief åˆ é™¤ï¼ˆå›æ”¶ï¼‰handle
+     * \param ptr æŒ‡é’ˆ
      */
     template <typename _Child_Type, typename _Handle_Value>
     void entity_handle<_Child_Type, _Handle_Value>::del_handle(entity_handle* ptr) {
@@ -340,9 +340,9 @@ namespace base {
     }
 
     /**
-     * \brief ×ª»»
-     * \param handle_value ¾ä±úÖµ
-     * \return Ö¸Õë
+     * \brief è½¬æ¢
+     * \param handle_value å¥æŸ„å€¼
+     * \return æŒ‡é’ˆ
      */
     template <typename _Child_Type, typename _Handle_Value>
     _Child_Type* entity_handle<_Child_Type, _Handle_Value>::exchange(entity_handle_type handle_value) {
