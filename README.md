@@ -1,6 +1,12 @@
 # anything
 零碎内容
 
+## easy_datetime
+- 基于 std::chrono 封装的 datetime 相关
+- timestamp 2 string 使用 static thread_local 避免同一秒重复做转换（缓存上次转换的s），比如在日志库使用这种
+- 有一个复杂的 string 2 time_point 的函数，应对复杂的场景，实测下来比 std::get_time 方式快 1 倍，比 google 的 https://github.com/google/cctz 应该是慢的~
+- 先留着把，后面有想法了做优化
+
 ## encoding
 - gbk utf8 ~
 
