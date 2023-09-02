@@ -133,7 +133,7 @@ namespace easy { namespace datetime {
     /// @param ts 
     /// @return
     template<typename _Duration = default_duration>
-    static constexpr clock::time_point timestamp_2_time_point(timestamp ts) {
+    static constexpr clock::time_point from_timestamp(timestamp ts) {
         return clock::time_point(_Duration(ts));
     }
 
@@ -164,6 +164,7 @@ namespace easy { namespace datetime {
     /// @return 
     static inline std::string_view localtime_string_v(clock::time_point ctp, bool format_ms = true) {
 
+        static thread_local bool been_set = false;
         static thread_local std::chrono::seconds last_secs{ };
 
         static constexpr std::size_t result_size = 32;
@@ -178,7 +179,7 @@ namespace easy { namespace datetime {
         std::chrono::system_clock::duration ctp_dur = ctp.time_since_epoch();
         std::chrono::seconds cpt_secs = std::chrono::duration_cast<std::chrono::seconds>(ctp_dur);
 
-        if (last_secs == cpt_secs) {
+        if (been_set && last_secs == cpt_secs) {
             std::string_view result(last_secs_result, result_size);
             if (format_ms) {
                 const long long ms = std::chrono::duration_cast<std::chrono::milliseconds>(ctp_dur).count() % ms_ratio;
@@ -191,6 +192,7 @@ namespace easy { namespace datetime {
         }
 
         last_secs = cpt_secs;
+        been_set = true;
 
         static thread_local std::tm cpt_tm = std::tm();
         auto cpt_secs_count = last_secs.count();
@@ -229,6 +231,79 @@ namespace easy { namespace datetime {
         return std::string{ sv.data(), sv.size() };
     }
 
+    /// @brief convert to utc string_view
+    /// @param ctp source 
+    /// @param format_ms 
+    /// @return 
+    static inline std::string_view utc_string_v(clock::time_point ctp, bool format_ms = true) {
+
+        static thread_local bool been_set = false;
+        static thread_local std::chrono::seconds last_secs{ };
+
+        static constexpr std::size_t result_size = 32;
+        static constexpr std::size_t secs_result_size = 19;         // length after format seconds
+        static constexpr std::size_t msecs_result_size = 19 + 4;    // length after format seconds + msecs
+
+        static constexpr long long ms_ratio = 1000;
+
+        // %4d-%02d-%02d %02d:%02d:%02d.%03d
+        static thread_local char last_secs_result[result_size]{ };
+
+        std::chrono::system_clock::duration ctp_dur = ctp.time_since_epoch();
+        std::chrono::seconds cpt_secs = std::chrono::duration_cast<std::chrono::seconds>(ctp_dur);
+
+        if (been_set && last_secs == cpt_secs) {
+            std::string_view result(last_secs_result, result_size);
+            if (format_ms) {
+                const long long ms = std::chrono::duration_cast<std::chrono::milliseconds>(ctp_dur).count() % ms_ratio;
+                [[maybe_unused]] auto snf_res_ms = snprintf(last_secs_result + secs_result_size, result_size - secs_result_size - 1, ".%03lld", ms);
+                result.remove_suffix(result_size - msecs_result_size);
+            } else {
+                result.remove_suffix(result_size - secs_result_size);
+            }
+            return result;
+        }
+
+        last_secs = cpt_secs;
+        been_set = true;
+
+        static thread_local std::tm cpt_tm = std::tm();
+        auto cpt_secs_count = last_secs.count();
+
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64) // windows platform
+        [[maybe_unused]] auto lt_res = gmtime_s(&cpt_tm, &cpt_secs_count);
+#else // other platforms
+        [[maybe_unused]] auto lt_res gmtime_r(&cpt_secs_count, &cpt_tm);
+#endif
+
+        [[maybe_unused]] auto snf_res = snprintf(last_secs_result, result_size - 1, "%4d-%02d-%02d %02d:%02d:%02d",
+            cpt_tm.tm_year + 1900,
+            cpt_tm.tm_mon + 1,
+            cpt_tm.tm_mday,
+            cpt_tm.tm_hour,
+            cpt_tm.tm_min,
+            cpt_tm.tm_sec);
+
+        std::string_view result(last_secs_result, result_size);
+        if (format_ms) {
+            const long long ms = std::chrono::duration_cast<std::chrono::milliseconds>(ctp_dur).count() % ms_ratio;
+            [[maybe_unused]] auto snf_res_ms = snprintf(last_secs_result + secs_result_size, result_size - secs_result_size - 1, ".%03lld", ms);
+            result.remove_suffix(result_size - msecs_result_size);
+        } else {
+            result.remove_suffix(result_size - secs_result_size);
+        }
+        return result;
+    }
+
+    /// @brief convert to utc string
+    /// @param ctp source 
+    /// @param format_ms 
+    /// @return 
+    static inline std::string utc_string(clock::time_point ctp, bool format_ms = true) {
+        const auto sv = utc_string_v(ctp, format_ms);
+        return std::string{ sv.data(), sv.size() };
+    }
+
     /// @brief complex exchange to time_point
     /// @tparam _Future_Point 
     /// @param source 
@@ -241,7 +316,7 @@ namespace easy { namespace datetime {
     /// 2021-03-03             -> hours = 0      time_point
     /// (next day if _Future_Point == true && result time_point < current_time_point)
     ///  ||
-    ///  ¡­¡­
+    ///  â€¦â€¦
     /// 01:02:03.456 -> current date & 01:02:03.456 time_point
     /// 01:02:03     -> current date & 01:02:03     time_point
     template<bool _Future_Point = false>
@@ -434,7 +509,37 @@ std::cout << easy::datetime::current_days_timestamp() << std::endl;
 }
 
 std::cout << easy::datetime::localtime_string(easy::datetime::current_time_point()).data() << std::endl;
-Sleep(1000 * 10);
+Sleep(1000);
 std::cout << easy::datetime::localtime_string(easy::datetime::current_time_point()).data() << std::endl;
+
+std::cout << "----------------------------------------------------------------------" << std::endl;
+
+auto _00 = easy::datetime::from_timestamp<std::chrono::seconds>(0);                 // 1970-01-01 00:00:00
+auto _01 = easy::datetime::from_timestamp<std::chrono::seconds>(57600);             // +16 hours
+auto _02 = easy::datetime::from_timestamp<std::chrono::seconds>(86400);             // +24 hours
+auto _03 = easy::datetime::from_timestamp<std::chrono::seconds>(90000);             // +25 hours
+auto _04 = easy::datetime::from_timestamp<std::chrono::seconds>(144000);            // +1 days 16 hours
+auto _05 = easy::datetime::from_timestamp<std::chrono::seconds>(172800);            // +2 days
+auto _06 = easy::datetime::from_timestamp<std::chrono::seconds>(28800 - 28800);     // 0
+auto _07 = easy::datetime::from_timestamp<std::chrono::seconds>(57600 - 28800);     // +16 hours - 8 hours
+auto _08 = easy::datetime::from_timestamp<std::chrono::seconds>(86400 - 28800);     // +24 hours - 8 hours
+auto _09 = easy::datetime::from_timestamp<std::chrono::seconds>(90000 - 28800);     // +25 hours - 8 hours
+auto _10 = easy::datetime::from_timestamp<std::chrono::seconds>(144000 - 28800);    // +40 hours - 8 hours
+auto _11 = easy::datetime::from_timestamp<std::chrono::seconds>(172800 - 28800);    // +48 hours - 8 hours
+
+std::cout << "local: " << easy::datetime::localtime_string(_00) << " utc: " << easy::datetime::utc_string(_00) << "  // 0" << std::endl;
+std::cout << "local: " << easy::datetime::localtime_string(_01) << " utc: " << easy::datetime::utc_string(_01) << "  // +16 hours" << std::endl;
+std::cout << "local: " << easy::datetime::localtime_string(_02) << " utc: " << easy::datetime::utc_string(_02) << "  // +24 hours" << std::endl;
+std::cout << "local: " << easy::datetime::localtime_string(_03) << " utc: " << easy::datetime::utc_string(_03) << "  // +25 hours" << std::endl;
+std::cout << "local: " << easy::datetime::localtime_string(_04) << " utc: " << easy::datetime::utc_string(_04) << "  // +1 days 16 hours" << std::endl;
+std::cout << "local: " << easy::datetime::localtime_string(_05) << " utc: " << easy::datetime::utc_string(_05) << "  // +2 days" << std::endl;
+std::cout << "local: " << easy::datetime::localtime_string(_06) << " utc: " << easy::datetime::utc_string(_06) << "  // 0" << std::endl;
+std::cout << "local: " << easy::datetime::localtime_string(_07) << " utc: " << easy::datetime::utc_string(_07) << "  // +16 hours - 8 hours" << std::endl;
+std::cout << "local: " << easy::datetime::localtime_string(_08) << " utc: " << easy::datetime::utc_string(_08) << "  // +24 hours - 8 hours" << std::endl;
+std::cout << "local: " << easy::datetime::localtime_string(_09) << " utc: " << easy::datetime::utc_string(_09) << "  // +25 hours - 8 hours" << std::endl;
+std::cout << "local: " << easy::datetime::localtime_string(_10) << " utc: " << easy::datetime::utc_string(_10) << "  // +40 hours - 8 hours" << std::endl;
+std::cout << "local: " << easy::datetime::localtime_string(_11) << " utc: " << easy::datetime::utc_string(_11) << "  // +48 hours - 8 hours" << std::endl;
+
+std::cout << "----------------------------------------------------------------------" << std::endl;
  *
  */
