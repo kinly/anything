@@ -130,8 +130,8 @@ namespace easy { namespace datetime {
 
     /// @brief timestamp to time_point(system clock)
     /// @tparam _Duration duration type
-    /// @param ts 
-    /// @return
+    /// @param ts timestamp
+    /// @return time_point(system clock)
     template<typename _Duration = default_duration>
     static constexpr clock::time_point from_timestamp(timestamp ts) {
         return clock::time_point(_Duration(ts));
@@ -160,8 +160,8 @@ namespace easy { namespace datetime {
 
     /// @brief convert to localtime string_view
     /// @param ctp source 
-    /// @param format_ms 
-    /// @return 
+    /// @param format_ms result include ms
+    /// @return string_view
     static inline std::string_view localtime_string_v(clock::time_point ctp, bool format_ms = true) {
 
         static thread_local bool been_set = false;
@@ -224,8 +224,8 @@ namespace easy { namespace datetime {
 
     /// @brief convert to localtime string
     /// @param ctp source 
-    /// @param format_ms 
-    /// @return 
+    /// @param format_ms result include ms
+    /// @return string_view
     static inline std::string localtime_string(clock::time_point ctp, bool format_ms = true) {
         const auto sv = localtime_string_v(ctp, format_ms);
         return std::string{ sv.data(), sv.size() };
@@ -233,8 +233,8 @@ namespace easy { namespace datetime {
 
     /// @brief convert to utc string_view
     /// @param ctp source 
-    /// @param format_ms 
-    /// @return 
+    /// @param format_ms result include ms
+    /// @return string_view
     static inline std::string_view utc_string_v(clock::time_point ctp, bool format_ms = true) {
 
         static thread_local bool been_set = false;
@@ -297,8 +297,8 @@ namespace easy { namespace datetime {
 
     /// @brief convert to utc string
     /// @param ctp source 
-    /// @param format_ms 
-    /// @return 
+    /// @param format_ms result include ms
+    /// @return string_view
     static inline std::string utc_string(clock::time_point ctp, bool format_ms = true) {
         const auto sv = utc_string_v(ctp, format_ms);
         return std::string{ sv.data(), sv.size() };
@@ -306,19 +306,16 @@ namespace easy { namespace datetime {
 
     /// @brief complex exchange to time_point
     /// @tparam _Future_Point 
-    /// @param source 
-    /// @return
-    /// 
+    /// @param source formatted string
+    /// @return pair<time_point, is success>
     /// 2021-03-03 11:22:33.12 -> millisecs = 12 time_point
     /// 2021-03-03 11:22:33    -> millisecs = 0  time_point
     /// 2021-03-03 11:22       -> seconds = 0    time_point
     /// 2021-03-03 11          -> minutes = 0    time_point
     /// 2021-03-03             -> hours = 0      time_point
-    /// (next day if _Future_Point == true && result time_point < current_time_point)
-    ///  ||
-    ///  ……
     /// 01:02:03.456 -> current date & 01:02:03.456 time_point
     /// 01:02:03     -> current date & 01:02:03     time_point
+    /// (next day if result time_point < current_time_point && template value _Future_Point == true)
     template<bool _Future_Point = false>
     static inline std::pair<clock::time_point, bool> complex_time_point(const char* source) {
 
