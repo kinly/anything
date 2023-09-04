@@ -200,7 +200,7 @@ namespace easy { namespace datetime {
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64) // windows platform
         [[maybe_unused]] auto lt_res = localtime_s(&cpt_tm, &cpt_secs_count);
 #else // other platforms
-        [[maybe_unused]] auto lt_res localtime_r(&cpt_secs_count, &cpt_tm);
+        [[maybe_unused]] auto lt_res = localtime_r(&cpt_secs_count, &cpt_tm);
 #endif
 
         [[maybe_unused]] auto snf_res = snprintf(last_secs_result, result_size - 1, "%4d-%02d-%02d %02d:%02d:%02d",
@@ -273,7 +273,7 @@ namespace easy { namespace datetime {
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64) // windows platform
         [[maybe_unused]] auto lt_res = gmtime_s(&cpt_tm, &cpt_secs_count);
 #else // other platforms
-        [[maybe_unused]] auto lt_res gmtime_r(&cpt_secs_count, &cpt_tm);
+        [[maybe_unused]] auto lt_res = gmtime_r(&cpt_secs_count, &cpt_tm);
 #endif
 
         [[maybe_unused]] auto snf_res = snprintf(last_secs_result, result_size - 1, "%4d-%02d-%02d %02d:%02d:%02d",
@@ -440,7 +440,7 @@ namespace easy { namespace datetime {
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64) // windows platform
                 [[maybe_unused]] auto lt_res = localtime_s(&cpt_tm, &cpt_secs_count);
 #else // other platforms
-                [[maybe_unused]] auto lt_res localtime_r(&cpt_secs_count, &cpt_tm);
+                [[maybe_unused]] auto lt_res = localtime_r(&cpt_secs_count, &cpt_tm);
 #endif
 
                 convert_day = cpt_tm.tm_mday;
