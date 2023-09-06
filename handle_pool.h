@@ -39,7 +39,7 @@ namespace base {
         using type = handle_type_default;
         using bits = handle_bits_default;
 
-        static constexpr type invalid_handle = (1 << (static_cast<unsigned>(bits::cell)
+        static constexpr type invalid_handle = ((static_cast<type>(1)) << (static_cast<unsigned>(bits::cell)
             + static_cast<unsigned>(bits::chunk)
             + static_cast<unsigned>(bits::rnd)
             + static_cast<unsigned>(bits::crc)
