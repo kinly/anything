@@ -1,6 +1,9 @@
 # anything
 零碎内容
 
+## endianness 
+- 大小端写入、读取（基于c++的reinterpret_cast）
+
 ## easy_datetime
 - 基于 std::chrono 封装的 datetime 相关
 - timestamp 2 string 使用 static thread_local 避免同一秒重复做转换（缓存上次转换的s），比如在日志库使用这种
