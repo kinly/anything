@@ -35,7 +35,7 @@ namespace easy { namespace datetime {
     /// @return time_point (system_clock)
     template<typename _Rep = long long, typename _Period = std::milli>
     static constexpr inline clock::time_point current_time_point(std::chrono::duration<_Rep, _Period> offset) noexcept {
-        return current_time_point(std::chrono::duration<_Rep, _Period>(offset.count()));
+        return clock::now() + offset;
     }
 
     /// @brief current(now) timestamp
