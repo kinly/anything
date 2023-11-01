@@ -140,3 +140,19 @@ namespace base {
         }
     }
 }; // end namespace base
+
+
+/*
+    std::cout << "[" << base::ltrim("\t\n  x y  \n\t\r"sv) << "]\n";
+    std::cout << "[" << base::rtrim("\t\n  x y  \n\t\r"sv) << "]\n";
+    std::cout << "[" << base::trim("\t\n  x y  \n\t\r"sv) << "]\n";
+
+    auto vec_1 = base::split("1|2|3|4|", '|');
+    auto vec_2 = base::split("1|2|3|4", '|');
+    auto vec_3 = base::split("|1|2|3|4", '|');
+    auto vec_4 = base::split("1|2|3||4", '|');
+    auto vec_11 = base::split("1|2|3|4|", "|");
+    auto vec_22 = base::split("1|2|3|4", "|");
+    auto vec_33 = base::split("|1|2|3|4", '|');
+    auto vec_44 = base::split("1|2|3||4", '|');
+*/
