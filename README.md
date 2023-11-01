@@ -1,6 +1,13 @@
 # anything
 零碎内容
 
+## string_simple
+- string 常用的操作
+  - to number
+  - trim
+  - split
+  - stream getline handle CR LF CRLF
+
 ## tuple_helper
 - tuple hash & print helper 
 
