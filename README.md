@@ -1,6 +1,9 @@
 # anything
 零碎内容
 
+## property_simple
+- 一个简化的属性模型，key-value键值对 + set'ed function
+
 ## cell_helix
 - 由内向外的螺旋算法，用于相对坐标点遍历
 
