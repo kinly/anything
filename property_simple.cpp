@@ -119,4 +119,9 @@ void property_simple_test() {
     owner->get_property_mgr().add_basic(static_cast<property::def::key_type>(property::key::max_hp_percent), 100);
 
     std::cout << owner->get_property_mgr().get(static_cast<property::def::key_type>(property::key::hp)) << std::endl;
+
+    owner->get_property_mgr().add_basic(static_cast<property::def::key_type>(property::key::max_hp), 10000);
+
+    std::cout << owner->get_property_mgr().get(static_cast<property::def::key_type>(property::key::hp))
+        << "/" << owner->get_property_mgr().get(static_cast<property::def::key_type>(property::key::max_hp)) << std::endl;
 }
