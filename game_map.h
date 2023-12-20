@@ -358,4 +358,152 @@ namespace map {
             }
         }
     };
+
+    //////////////////////////////////////////////////////////////////////////
+    /// virtual region
+    /// 虚拟分块/逻辑分块
+    /// 例如：AI刷新，周围有人才执行刷新，但是AI定时器放在生物身上、视野上都会太多，可以使用虚拟分块把地图分成更大的块，定时器放在虚拟分块
+
+
+    struct region_point {
+        uint32_t rgx = 0;
+        uint32_t rgy = 0;
+
+        region_point() = default;
+        region_point(uint32_t x, uint32_t y)
+            : rgx(x)
+            , rgy(y) {
+        }
+
+        bool operator == (const region_point& rgpt) const {
+            return rgx == rgpt.rgx && rgy == rgpt.rgy;
+        }
+    };
+
+    /// @brief 按照格子数量分片
+    /// @tparam x_vv 一片x轴格子数
+    /// @tparam y_vv 一片y轴格子数
+    template<uint32_t x_vv = 60, uint32_t y_vv = 40>
+    class sharding_rule_cell {
+    public:
+        /// @brief 地图分片
+        /// @param map_base 地图信息
+        /// @return pair<分片数量, 每一片cell数量>
+        static std::pair<region_point, point> sharding(const base_config& map_base) noexcept {
+            if (x_vv == 0 || y_vv == 0) {
+                return {
+                    { 1, 1 },
+                    { map_base.cell.cx, map_base.cell.cy }
+                };
+            }
+
+            region_point rgpt;
+            if (x_vv >= map_base.cell.cx) {
+                rgpt.rgx = 1;
+            } else {
+                rgpt.rgx = (map_base.cell.cx + x_vv - 1) / x_vv;
+            }
+
+            if (y_vv >= map_base.cell.cy) {
+                rgpt.rgy = 1;
+            } else {
+                rgpt.rgy = (map_base.cell.cy + y_vv - 1) / y_vv;
+            }
+
+            return {
+                {rgpt.rgx, rgpt.rgy},
+                {x_vv, y_vv}
+            };
+        }
+    };
+
+    /// @brief 按照切割次数分片
+    /// @tparam x_vv x轴切割数
+    /// @tparam y_vv y轴切割数
+    template<uint32_t x_vv = 60, uint32_t y_vv = 40>
+    class sharding_rule_cutoff {
+    public:
+        /// @brief 地图分片
+        /// @param map_base 地图信息
+        /// @return pair<分片数量, 每一片cell数量>
+        static std::pair<region_point, point> sharding(const base_config& map_base) noexcept {
+            if (x_vv == 0 || y_vv == 0) {
+                return {
+                    { 1, 1 },
+                    { map_base.cell.cx, map_base.cell.cy }
+                };
+            }
+
+            point pt;
+            if (x_vv + 1 >= map_base.cell.cx) {
+                pt.x = map_base.cell.cx;
+            } else {
+                pt.x = map_base.cell.cx / (x_vv + 1) + (map_base.cell.cx % (x_vv + 1) > 0 ? 1 : 0);
+            }
+
+            if (y_vv + 1 >= map_base.cell.cy) {
+                pt.y = map_base.cell.cy;
+            } else {
+                pt.y = map_base.cell.cy / (y_vv + 1) + (map_base.cell.cy % (y_vv + 1) > 0 ? 1 : 0);
+            }
+
+            return {
+                { x_vv + 1, y_vv + 1 },
+                { pt.x, pt.y }
+            };
+        }
+    };
+
+    class virtual_region final {
+    public:
+        class impl;
+    private:
+        std::unique_ptr<impl> _impl = nullptr;
+
+    public:
+        explicit virtual_region(impl* ptr)
+            : _impl(ptr) {
+        }
+
+        ~virtual_region() {
+            _impl = nullptr;
+        }
+
+        void exchange_cell(entity* ent, const cell_point& old_cpt, const cell_point& new_cpt) const {
+            if (_impl) {
+                _impl->exchange_cell(ent, old_cpt, new_cpt);
+            }
+        }
+
+        class impl {
+        public:
+            virtual ~impl() = 0;
+
+            virtual void exchange_cell(entity* ent, const cell_point& old_cpt, const cell_point& new_cpt) = 0;
+        };
+    };
+
+    /// @brief simple: ai's virtual region
+    /// @tparam sharding_tt 
+    template<class sharding_tt>
+    class virtual_region_ai : public virtual_region::impl {
+        struct region_data final {
+            // timer handle
+            // region's monster entity list
+            // region's player count
+        };
+
+    private:
+        region_point _rgpt;                 /// 虚拟分块数
+        point _cells;                       /// 每块的格子数
+
+        std::vector<region_data> _regions;  /// 块数据
+    public:
+        explicit virtual_region_ai(map* owner) {
+            auto ret = sharding_tt::sharding(owner->_config);
+            _rgpt = ret.first;
+            _cells = ret.second;
+            _regions.resize(_rgpt.rgx * _rgpt.rgy);
+        }
+    };
 }; // end namespace map
