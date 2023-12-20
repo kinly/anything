@@ -477,7 +477,7 @@ namespace map {
 
         class impl {
         public:
-            virtual ~impl() = 0;
+            virtual ~impl() {}
 
             virtual void exchange_cell(entity* ent, const cell_point& old_cpt, const cell_point& new_cpt) = 0;
         };
