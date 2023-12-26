@@ -1,9 +1,6 @@
 # anything
 零碎内容
 
-## covert_docx2md.sh
-- 基于pandoc，word转markdown
-
 ## property_simple
 - 一个简化的属性模型，key-value键值对 + set'ed function
 
