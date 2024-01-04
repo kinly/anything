@@ -1,6 +1,13 @@
 # anything
 零碎内容
 
+## easy_allocator
+- 简单版本的对象池
+  - 定长：使用 std::vector
+  - 不定长：使用 std::stack
+- 起初是觉得定时器的 event 分配释放太频繁了
+- 封装了不定参模版的 allocate，对于 c++ 更友好
+
 ## property_simple
 - 一个简化的属性模型，key-value键值对 + set'ed function
 
