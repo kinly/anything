@@ -1,6 +1,9 @@
 # anything
 零碎内容
 
+## string_util
+- string 常用操作
+
 ## easy_allocator
 - 简单版本的对象池
   - 定长：使用 std::vector
