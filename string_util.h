@@ -364,5 +364,41 @@ string_tt remove(const string_tt &str, const typename string_tt::value_type ch,
   replace_in_place(result, ch, 0, start);
   return result;
 }
+
+template <class string_tt>
+std::vector<string_tt> split(const string_tt &str,
+                             const typename string_tt::value_type delim,
+                             const size_t max_field = 0) {
+  std::vector<string_tt> result;
+  std::size_t start_pos{};
+  std::size_t end_pos{};
+  std::size_t count_field{};
+
+  do {
+    end_pos = str.find_first_of(delim, start_pos);
+    result.emplace_back(str.substr(start_pos, end_pos - start_pos));
+    start_pos = end_pos + 1;
+  } while (end_pos != std::string::npos &&
+           (max_field == 0 || ++count_field < max_field));
+  return result;
+}
+
+template <class string_tt>
+std::vector<string_tt> split(const string_tt &str,
+                             const string_tt& delim_str,
+                             const size_t max_field = 0) {
+  std::vector<string_tt> result;
+  std::size_t start_pos{};
+  std::size_t end_pos{};
+  std::size_t count_field{};
+
+  do {
+    end_pos = str.find_first_of(delim_str, start_pos);
+    result.emplace_back(str.substr(start_pos, end_pos - start_pos));
+    start_pos = end_pos + 1;
+  } while (end_pos != std::string::npos &&
+           (max_field == 0 || ++count_field < max_field));
+  return result;
+}
 } // namespace utils
 } // namespace easy
