@@ -4,12 +4,6 @@
 #include <vector>
 
 /// dep topological sort
-///      A
-///     / \
-///    B   C
-///    |  / \
-///     D    E
-/// -> A, B, C, D, E
 namespace easy::utils {
 
 template <class tt> class dep_sort {
@@ -24,8 +18,8 @@ public:
   using map_type = std::unordered_map<value_type, relation_type>;
 public:
   struct relation {
-    std::size_t dependencies;
-    std::unordered_set<value_type> dependents;
+    std::size_t dependencies{};                 // number of lines pointing me
+    std::unordered_set<value_type> dependents;  // nodes pointing me
   };
 
   struct result {
