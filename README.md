@@ -5,6 +5,7 @@
 - 基于 c++20 一些新语法的尝试
 - std::void_t + declval 判断是否有指定成员 https://en.cppreference.com/w/cpp/types/void_t
 - 向 lambda 传递 template<class... args> 不定参模版数据，并在需要的时候使用不定参模版参数
+  - 注意 lambda 的 mutable 是需要的，不然 has_on_rem 会检查失败，本想尝试 std::remove_const_t 方式，但是会报错，还没具体看
 - 基于以上实现一种包装切片（切面）的行为，外部带入切面对象（如例子中的 on_rem）
 - 之后在封装比如网络库、基础管理器，就不用使用纯虚接口了，切面方式更干净
 - 并没有在意过细节，只是拿lru这种容器实现做测试，实际使用还需要做些修改，比如锁的范围
