@@ -1,6 +1,11 @@
 # anything
 零碎内容
 
+## nostd_source_location
+- 可以在 c++20 之前（c++11 及以上）使用的编译期 source_location 信息
+- 主要可用在日志模块里
+- 主要是 msvc 环境的处理，gcc 里 __builtin_FILE() 等都是有的
+
 ## lru_cache
 - 基于 c++20 一些新语法的尝试
 - std::void_t + declval 判断是否有指定成员 https://en.cppreference.com/w/cpp/types/void_t
