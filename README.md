@@ -1,6 +1,15 @@
 # anything
 零碎内容
 
+## 测试中：splitter_sort
+- 期望做一个简易的排行榜，用分列表的方式，底层还是用 std::map 排序
+- 当前看到性能比预期低，相比裸 std::map 只是多了排名功能
+- 后续持续看 & 修改
+- 最终达不到期望（std::map 2倍+）的话换 skiplist
+- 不过还是觉得skiplist不一定比map快（单线程场景），多线程skiplist锁的粒度理论上可以更小，所以可能更快
+![image](https://github.com/user-attachments/assets/c3f3128e-47fc-48d0-bd60-e44719cf2ef0)
+
+
 ## nostd_source_location
 - 可以在 c++20 之前（c++11 及以上）使用的编译期 source_location 信息
 - 主要可用在日志模块里
