@@ -1,6 +1,10 @@
 # anything
 零碎内容
 
+## lfu_cache
+- 区别于lru cache，根据访问次数做排序
+- 只想用简单结构 `std::set` 配合全局自增量重写 operator <
+
 ## 测试中：splitter_sort
 - 期望做一个简易的排行榜，用分列表的方式，底层还是用 std::map 排序
 - 当前看到性能比预期低，相比裸 std::map 只是多了排名功能
