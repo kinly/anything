@@ -328,15 +328,34 @@ namespace map {
             for (int32_t y = -_config.eyesight.y; y <= _config.eyesight.y; ++y) {
                 for (int32_t x = -_config.eyesight.x; x <= _config.eyesight.x; ++x) {
 
-                    // 两个方向偏移后新点和目标点距离小于半径，用两圆香蕉的方式看待
+                    // 两个方向偏移后新点和目标点距离小于半径，用两圆相交的方式看待
                     if (!force
                         && std::abs(static_cast<int32_t>(from.ax) + x - static_cast<int32_t>(to.ax)) <= _config.eyesight.x
                         && std::abs(static_cast<int32_t>(from.ay) + y - static_cast<int32_t>(to.ay)) <= _config.eyesight.y) {
+                        // 这里是不变的部分，如果是不对等的动态视野
+                        // 比如手持火把的视野距离 = 10，没有火把的视野距离 = 5
+                        // if (不对等视野)
+                        // {
+                        //    auto no_changes = entitys(area_point{frome.ax + x, from.ay + y}, nullptr);
+                        //    // 插入到队列
+                        //    event.impl()->no_changes(ptr, ptr_from_cpt, one);
+                        //    实现-> bool tar_before_visible = true, tar_after_visible = true;
+                        //    if (tar->is_player() && 不对等视野) 
+                        //    -> tar_before_visible = distance(ptr_from_cpt, tar->cell_point()) <= tar->视距
+                        //    -> tar_after_visible = distance(ptr->cell_point(), tar->cell_point()) <= tar->视距
+                        //    if (tar_after_visible && !tar_before_visible) -> 进视野
+                        //    if (tar_before_visible && !tar_after_visible) -> 出视野
+                        //    ptr 同理
+                        // }
                         continue;
                     }
                     if (ok_from) {
                         auto leas = entitys(area_point{ from.ax + x, from.ay + y }, nullptr);
                         std::copy(leas.begin(), leas.end(), std::back_inserter(leaves));
+
+                        // todo: 上面可以优化为
+                        // if (ptr->is_player()) {// 找area的场景对象}
+                        // else {// 找area的玩家} 
                     }
                     if (ok_to) {
                         auto ents = entitys(area_point{ to.ax - x, to.ay + y }, nullptr);
