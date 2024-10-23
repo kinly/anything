@@ -1,6 +1,10 @@
 # anything
 零碎内容
 
+## rank-simple
+- 简易排行榜容器
+- https://klysisle.space/archives/df49bf4d.html
+
 ## lfu_cache
 - 区别于lru cache，根据访问次数做排序
 - 只想用简单结构 `std::set` 配合全局自增量重写 operator <
