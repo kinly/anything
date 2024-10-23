@@ -71,11 +71,11 @@ class cache {
     return true;
   }
 
-  value_tt* get(const key_tt& key) {
+  const value_tt* get(const key_tt& key) {
     if (auto iter = _key2node.find(key); iter != _key2node.end()) {
       auto ignore_res = put(key, iter->second->value);
       iter = _key2node.find(key);
-      return const_cast<value_tt*>(&(iter->second->value));
+      return &(iter->second->value);
     }
     return nullptr;
   }
