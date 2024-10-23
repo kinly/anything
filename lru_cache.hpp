@@ -8,33 +8,34 @@ namespace easy::lru {
 
 template <class key_tt, class value_tt, size_t max_size>
 class cache {
-public:
+ public:
   using element_type = std::pair<key_tt, value_tt>;
   using array_type = std::list<element_type>;
-  using map_type = std::unordered_map<key_tt, typename array_type::const_iterator>;
+  using map_type =
+      std::unordered_map<key_tt, typename array_type::const_iterator>;
 
-public:
+ public:
   // https://en.cppreference.com/w/cpp/types/void_t
   // slice object trait
-  template <class, class = void> struct has_on_rem : std::false_type {};
+  template <class, class = void>
+  struct has_on_rem : std::false_type {};
   template <class slice_object>
   struct has_on_rem<slice_object,
-      std::void_t<decltype(std::declval <
-                           slice_object>().on_rem(
-          std::declval<key_tt &>(), std::declval<value_tt &>()))>>
+                    std::void_t<decltype(std::declval<slice_object>().on_rem(
+                        std::declval<key_tt &>(), std::declval<value_tt &>()))>>
       : std::true_type {};
 
   template <class slice_object>
   static constexpr bool has_on_rem_v = has_on_rem<slice_object>::value;
 
-private:
+ private:
   array_type _data_array;
   map_type _data_map;
   mutable std::mutex _mut;
 
   std::function<void(key_tt &key, value_tt &value)> _on_rem;
 
-private:
+ private:
   template <class slice_tt>
   void do_on_rem(slice_tt &s, key_tt &key, value_tt &value) {
     if constexpr (has_on_rem_v<slice_tt>) {
@@ -42,7 +43,7 @@ private:
     }
   }
 
-public:
+ public:
   template <class... slice_args>
   explicit cache(slice_args &&...sargs) {
     // https://stackoverflow.com/questions/47496358/c-lambdas-how-to-capture-variadic-parameter-pack-from-the-upper-scope
@@ -135,32 +136,4 @@ public:
   }
 };
 
-
-}; // end namespace easy::lru
-
-/*
-  {
-    struct a_rem {
-      bool on_rem(int& k, int& v) {
-        std::cout << "a's rem :" << k << "\t" << v << std::endl;
-        return true;
-      }
-    };
-    struct b_rem {
-      bool on_rem(int &k, int &v) {
-        std::cout << "b's rem :" << k << "\t" << v << std::endl;
-          return true;
-      }
-    };
-
-    easy::lru::cache<int, int, 4> lru_cache(a_rem{}, b_rem{});
-
-    auto res = lru_cache.has_on_rem_v<const a_rem>;  // res == false
-
-    lru_cache.add(1, 1);
-    lru_cache.add(2, 1);
-    lru_cache.add(3, 1);
-    lru_cache.add(4, 1);
-    lru_cache.add(5, 1);
-  }
-*/
+};  // namespace easy::lru
