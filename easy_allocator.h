@@ -2,157 +2,181 @@
 #include <cstdint>
 #include <stack>
 #include <vector>
+#include <memory>
 
-namespace easy { namespace alloc {
+namespace easy {
+namespace alloc {
 
-    static constexpr int32_t size_unlimited = -1;
+static constexpr int32_t size_unlimited = -1;
 
-    template<class object_tt, int32_t size_tt>
-    class allocator {
-    public:
-        using object_ptr = object_tt*;
-    protected:
-        std::vector<object_ptr> _alloceds;
-    private:
-        void* __allocate() {
-            void* result = nullptr;
-            if (!_alloceds.empty()) {
-                result = static_cast<void*>(_alloceds.back());
-                _alloceds.pop_back();
-            } else {
-                result = ::operator new(sizeof(object_tt));
-            }
-            return result;
-        }
+template <class object_tt, int32_t size_vv>
+class allocator {
+ public:
+  using object_type = std::decay_t<object_tt>;
+  using object_ptr = std::unique_ptr<object_type>;
 
-    public:
-        allocator() {
-            _alloceds.reserve(size_tt);
-        }
+ protected:
+  std::vector<object_ptr> _alloceds;
 
-        virtual ~allocator() {
-            while (!_alloceds.empty()) {
-                ::operator delete(_alloceds.back());
-                _alloceds.pop_back();
-            }
-        }
+ private:
+  object_ptr __allocate() {
+    if (!_alloceds.empty()) {
+      object_ptr result = std::move(_alloceds.back());
+      _alloceds.pop_back();
+      return result;
+    }
+    else {
+      return object_ptr(
+          static_cast<object_type*>(::operator new(sizeof(object_tt))));
+    }
+  }
 
-        template<typename... Args>
-        object_ptr allocate(Args && ...args) {
-            object_ptr place = static_cast<object_ptr>(__allocate());
-            try {
-                new (place) object_tt(std::forward<Args>(args)...);
-            } catch (...) {
-                _alloceds.push_back(place);
-                throw;
-            }
-            return place;
-        }
+ public:
+  allocator() { _alloceds.reserve(size_vv); }
 
-        void deallocate(object_ptr obj) {
-            obj->~object_tt();
+  virtual ~allocator() {
+    _alloceds.clear();
+  }
 
-            if (_alloceds.size() >= size_tt) {
-                ::operator delete(obj);
-                obj = nullptr;
-            } else {
-                _alloceds.push_back(obj);
-            }
-        }
-    };
+  template <typename... args_tt>
+  object_type* allocate(args_tt&&... args) {
+    object_ptr place = __allocate();
+    try {
+      new (place.get()) object_tt(std::forward<args_tt>(args)...);
+    } catch (...) {
+      _alloceds.push_back(std::move(place));
+      throw;
+    }
+    return place.release();
+  }
 
-    template<class object_tt>
-    class allocator<object_tt, size_unlimited> {
-    public:
-        using object_ptr = object_tt*;
-    protected:
-        std::stack<object_ptr> _alloceds;
-    private:
-        void* __allocate() {
-            void* result = nullptr;
-            if (!_alloceds.empty()) {
-                result = static_cast<void*>(_alloceds.top());
-                _alloceds.pop();
-            } else {
-                result = ::operator new(sizeof(object_tt));
-            }
-            return result;
-        }
+  void deallocate(object_type* obj) {
+    obj->~object_tt();
 
-    public:
-        allocator() {
-        }
+    if (_alloceds.size() >= size_vv) {
+      ::operator delete(obj);
+    }
+    else {
+      _alloceds.push_back(std::unique_ptr<object_type>(obj));
+    }
+  }
 
-        virtual ~allocator() {
-            while (!_alloceds.empty()) {
-                ::operator delete(_alloceds.top());
-                _alloceds.pop();
-            }
-        }
+  template <typename... args_tt>
+  std::shared_ptr<object_type> allocate_shared(args_tt&&... args) {
+    auto ptr = allocate(std::forward<args_tt>(args)...);
+    if (ptr == nullptr)
+      return nullptr;
+    return std::shared_ptr<object_type>(ptr, [this](object_type* ptr) {
+      this->deallocate(ptr);
+    });
+  }
+};
 
-        template<typename... Args>
-        object_ptr allocate(Args && ...args) {
-            auto place = static_cast<object_ptr>(__allocate());
-            try {
-                new (place) object_tt(std::forward<Args>(args)...);
-            } catch (...) {
-                _alloceds.push(place);
-                throw;
-            }
-            return place;
-        }
+template <class object_tt>
+class allocator<object_tt, size_unlimited> {
+ public:
+  using object_type = std::decay_t<object_tt>;
+  using object_ptr = std::unique_ptr<object_type>;
 
-        void deallocate(object_ptr obj) {
-            obj->~object_tt();
-            _alloceds.push(obj);
-        }
-    };
-}}
+ protected:
+  std::stack<object_ptr> _alloceds;
 
+ private:
+  object_ptr __allocate() {
+    if (!_alloceds.empty()) {
+      object_ptr result = std::move(_alloceds.top());
+      _alloceds.pop();
+      return result;
+    }
+    else {
+      return object_ptr(
+          static_cast<object_type*>(::operator new(sizeof(object_tt))));
+    }
+  }
+
+ public:
+  allocator() {}
+
+  virtual ~allocator() {
+    while (!_alloceds.empty()) {
+      _alloceds.pop();
+    }
+  }
+
+  template <typename... args_tt>
+  object_type* allocate(args_tt&&... args) {
+    object_ptr place = __allocate();
+    try {
+      new (place.get()) object_tt(std::forward<args_tt>(args)...);
+    } catch (...) {
+      _alloceds.push(std::move(place));
+      throw;
+    }
+    return place.release();
+  }
+
+  void deallocate(object_type* obj) {
+    obj->~object_tt();
+    _alloceds.push(std::unique_ptr<object_type>(obj));
+  }
+
+  template <typename... args_tt>
+  std::shared_ptr<object_type> allocate_shared(args_tt&&... args) {
+    auto ptr = allocate(std::forward<args_tt>(args)...);
+    if (ptr == nullptr)
+      return nullptr;
+    return std::shared_ptr<object_type>(ptr, [this](object_type* ptr) {
+      this->deallocate(ptr);
+    });
+  }
+};
+}  // namespace alloc
+}  // namespace easy
 
 /*
  *
-    {
-        easy::alloc::allocator<timer_cost, -1> unlimited_alloc;
+void alloc_test() {
+  easy::alloc::allocator<timer_cost, -1> ulimited_alloc;
+  easy::alloc::allocator<timer_cost, 5> limited_alloc;
 
-        auto ptr = std::shared_ptr<timer_cost>(unlimited_alloc.allocate(),
-            [&unlimited_alloc](auto* ptr) { unlimited_alloc.deallocate(ptr); });
+  std::set<timer_cost*> allocs;
+  for (int i = 0; i < 100; ++i) {
+    auto one = ulimited_alloc.allocate();
 
+    if (i % 5 == 0) {
+      ulimited_alloc.deallocate(one);
+      continue;
     }
-    {
-        easy::alloc::allocator<timer_cost, -1> ulimited_alloc;
-        easy::alloc::allocator<timer_cost, 5> limited_alloc;
 
-        std::set<timer_cost*> allocs;
-        for (int i = 0; i < 100; ++i) {
-            auto one = ulimited_alloc.allocate();
+    allocs.emplace(std::move(one));
+  }
 
-            if (i % 5 == 0) {
-                ulimited_alloc.deallocate(one);
-                continue;
-            }
+  for (auto one : allocs) {
+    ulimited_alloc.deallocate(one);
+  }
+  allocs.clear();
 
-            allocs.emplace(one);
-        }
+  for (int i = 0; i < 100; ++i) {
+    auto one = limited_alloc.allocate();
 
-        for (auto one : allocs) {
-            ulimited_alloc.deallocate(one);
-        }
-        allocs.clear();
-
-        for (int i = 0; i < 100; ++i) {
-            auto one = limited_alloc.allocate();
-
-            if (i % 5 == 0) {
-                limited_alloc.deallocate(one);
-                continue;
-            }
-
-            allocs.emplace(one);
-        }
-
-        for (auto one : allocs) {
-            limited_alloc.deallocate(one);
-        }
+    if (i % 5 == 0) {
+      limited_alloc.deallocate(one);
+      continue;
     }
+
+    allocs.emplace(one);
+  }
+
+  for (auto one : allocs) {
+    limited_alloc.deallocate(one);
+  }
+
+  std::set<std::shared_ptr<timer_cost>> unique_allocs;
+  for (int i = 0; i < 100; ++i) {
+    auto one = ulimited_alloc.allocate_shared();
+
+    unique_allocs.emplace(std::move(one));
+  }
+  unique_allocs.clear();
+}
  */
