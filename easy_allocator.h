@@ -134,6 +134,20 @@ class allocator<object_tt, size_unlimited> {
 }  // namespace easy
 
 /*
+// 如果想增加 unique_ptr 支持，需要这么做
+// 因为 unique_ptr 的 deleter 需要在模板参数中明确指定....
+// 但是感觉这样的返回值类型可能对于大部分使用者都不是个方便的样子，就没有把这部分写入代码
+template <typename... args_tt>
+std::unique_ptr<object_type, std::function<void(object_type*)>> allocate_unique(args_tt&&... args) {
+   auto ptr = allocate(std::forward<args_tt>(args)...);
+   return std::unique_ptr<object_type, std::function<void(object_type*)>>(ptr, [this](object_type* ptr) {
+       this->deallocate(ptr);
+   });
+}
+*/
+
+
+/*
  *
 void alloc_test() {
   easy::alloc::allocator<timer_cost, -1> ulimited_alloc;
