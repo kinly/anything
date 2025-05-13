@@ -1,6 +1,11 @@
 # anything
 零碎内容
 
+## safe_destroy
+- 核心是容器销毁器，注意 `raw point` 销毁仅 `delete`
+- 基于更彻底的考虑，代码中有 `const_cast`
+- 大部分注释由AI生成（真是强大呀）
+
 ## rank-simple
 - 简易排行榜容器
 - https://klysisle.space/archives/df49bf4d.html
